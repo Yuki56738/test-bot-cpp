@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(test_bot_cpp main.cpp
         commands/ping.cpp
         commands/ping.h
+        commands/join.cpp
+        commands/join.h
 )
 add_subdirectory(cpp-dotenv)
 target_link_libraries(${PROJECT_NAME}

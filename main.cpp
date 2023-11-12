@@ -2,6 +2,7 @@
 #include <dpp/dpp.h>
 #include "commands/ping.h"
 #include "dotenv.h"
+#include "commands/join.h"
 
 using namespace dotenv;
 
@@ -18,6 +19,9 @@ int main() {
         if(event.command.get_command_name() == "ping"){
             ping(event);
         }
+        if(event.command.get_command_name() == "join"){
+            join(event);
+        }
     });
     bot.on_ready([&bot](const dpp::ready_t& event){
         std::cout << "Logged in as:" << bot.me.username << std::endl;
@@ -25,6 +29,7 @@ int main() {
             bot.global_command_create(
                     dpp::slashcommand("ping", "Reply with Pong!", bot.me.id)
                     );
+            bot.global_command_create(dpp::slashcommand("join", "Connect to VC.", bot.me.id));
         }
     });
     bot.start(dpp::st_wait);
