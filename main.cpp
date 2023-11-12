@@ -5,8 +5,6 @@
 const std::string TOKEN = "MTE3MDA3MTcwNjA5NDc5Njg2MA.G9W-tX.CPwJtT65m81yFmKGNRoZPP13kfclI6a_LzLCfE";
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-
     dpp::cluster bot(TOKEN);
     bot.on_log(dpp::utility::cout_logger());
 
