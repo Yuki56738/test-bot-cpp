@@ -3,9 +3,13 @@
 #include "commands/ping.h"
 #include "dotenv.h"
 
-const std::string TOKEN = "MTE3MDA3MTcwNjA5NDc5Njg2MA.G9W-tX.CPwJtT65m81yFmKGNRoZPP13kfclI6a_LzLCfE";
+using namespace dotenv;
 
 int main() {
+    env.load_dotenv();
+    auto& dotenv = env;
+    const std::string TOKEN = dotenv.operator[]("TOKEN");
+//    const std::string TOKEN = env["TOKEN"];
     dpp::cluster bot(TOKEN);
     bot.on_log(dpp::utility::cout_logger());
 
