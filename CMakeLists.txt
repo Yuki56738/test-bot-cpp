@@ -7,6 +7,8 @@ add_executable(test_bot_cpp main.cpp
         commands/ping.cpp
         commands/ping.h
 )
+add_subdirectory(cpp-dotenv)
 target_link_libraries(${PROJECT_NAME}
         dpp
+        cpp_dotenv
 )

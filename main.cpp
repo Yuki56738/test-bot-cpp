@@ -1,6 +1,7 @@
 #include <iostream>
 #include <dpp/dpp.h>
 #include "commands/ping.h"
+#include "dotenv.h"
 
 const std::string TOKEN = "MTE3MDA3MTcwNjA5NDc5Njg2MA.G9W-tX.CPwJtT65m81yFmKGNRoZPP13kfclI6a_LzLCfE";
 
