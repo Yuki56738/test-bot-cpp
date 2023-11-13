@@ -15,14 +15,12 @@ void join(const dpp::slashcommand_t& event){
 
         if (users_vc != g->voice_members.end() && current_vc->channel_id == users_vc->second.channel_id) {
             join_vc = false;
-
-        }else{
-            event.from->disconnect_voice(event.command.guild_id);
-            join_vc = true;
         }
     }
     if(join_vc){
         g->connect_member_voice(event.command.get_issuing_user().id);
         event.reply("Connected.");
+    }else{
+        event.reply("Already connected.");
     }
 }

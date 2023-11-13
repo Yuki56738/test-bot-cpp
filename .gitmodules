@@ -1,3 +1,6 @@
 [submodule "cpp-dotenv"]
 	path = cpp-dotenv
 	url = https://github.com/adeharo9/cpp-dotenv.git
+[submodule "cpprestsdk"]
+	path = cpprestsdk
+	url = https://github.com/microsoft/cpprestsdk.git

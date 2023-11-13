@@ -8,9 +8,22 @@ add_executable(test_bot_cpp main.cpp
         commands/ping.h
         commands/join.cpp
         commands/join.h
+        commands/leave.cpp
+        commands/leave.h
+        voice_generator.cpp
+        voice_generator.h
 )
 add_subdirectory(cpp-dotenv)
+#add_subdirectory(cpprestsdk)
+#add_subdirectory(cpprestsdk/Release)
+#find_package(cpprestsdk REQUIRED)
+find_package(cpprestsdk REQUIRED)
+
 target_link_libraries(${PROJECT_NAME}
+        PRIVATE
         dpp
         cpp_dotenv
+        cpprestsdk::cpprest
+        crypto
 )
+
