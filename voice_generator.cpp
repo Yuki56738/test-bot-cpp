@@ -12,42 +12,52 @@ using namespace web;
 using namespace web::http;
 using namespace web::http::client;
 using namespace concurrency::streams;
+using namespace std;
 
-void createWav(const utility::string_t& text, const utility::string_t& toPostUrl){
-    http_client client(U("http://" + toPostUrl));
+void createWav(const utility::string_t& text, const utility::string_t& to_post_url){
+    // Set the parameters
+//    utility::string_t to_post_url = U("your_server_address");
+//    utility::string_t text = U("your_text");
+    utility::string_t speaker = U("14");
 
+    // Prepare parameters for the first request
+    http_client client(to_post_url);
     uri_builder builder(U("/audio_query"));
-    builder.append_query(U("speaker"), U("14"));
-    builder.append_query(U("text"), utility::conversions::to_string_t(text));
+    builder.append_query(U("speaker"), speaker);
+    builder.append_query(U("text"), text);
 
-    client.request(methods::POST, builder.to_string())
-            .then([toPostUrl](http_response response) {
-                std::cout << "Status code: " << response.status_code() << std::endl;
-                auto res = response.extract_string();
-//            })
-//            .then([toPostUrl](std::string response_content) {
-                http_client client1(U("http://" + toPostUrl));
+    // Make the first POST request
+    http_response response = client.request(methods::POST, builder.to_string()).get();
+    wcout << L"Response status code: " << response.status_code() << std::endl;
 
-                uri_builder builder1(U("/synthesis"));
-                builder1.append_query(U("speaker"), U("14"));
+    // Prepare parameters for the second request
+    http_client client2(to_post_url);
+    uri_builder builder2(U("/synthesis"));
+    builder2.append_query(U("speaker"), speaker);
 
+    // Make the second POST request
+    http_request request2(methods::POST);
+    request2.headers().set_content_type(U("application/json"));
+    request2.headers().set_content_length(response.headers().content_length());
 
-                http_request request(methods::POST);
-                request.headers().add(U("Content-Type"), U("application/json"));
+    request2.set_body(response.body());
 
-                request.set_body(res.get());
+    http_response response2 = client2.request(request2.method(), builder2.to_string(), request2.body(), request2.headers()).get();
 
-                auto res1 = client1.request(methods::POST, builder1.to_string(),request.to_string());
-                std::cout << res1.get().status_code() << std::endl;
-//            })
-//            .then([](http_response response) {
-                auto res2 = res1.get().extract_vector();
-//            })
-//            .then([](std::vector<uint8_t> response_content) {
-                std::ofstream output_file("output.wav", std::ios::binary);
-                output_file.write(reinterpret_cast<const char*>(res2.get().data()), res2.get().size());
-                output_file.close();
-                std::cout << "WAV file created." << std::endl;
-            });
-}
+    // Save the response content to a file
+    auto fileStream = std::make_shared<ostream>();
+
+    // Open stream to output file.
+    pplx::task<void> writeTask = fstream::open_ostream(U("output.wav")).then([=](ostream outFile) {
+        *fileStream = outFile;
+
+        // Write the response content to the file.
+        return response2.body().read_to_end(fileStream->streambuf());
+    });
+
+    // Wait for the write operation to finish.
+    writeTask.wait();
+
+    wcout << L"File 'output.wav' saved." << std::endl;
+    }
 

@@ -9,13 +9,10 @@
 using namespace dotenv;
 
 int main() {
-//    env.load_dotenv();
     createWav("こんにちは！", "risaton.net:50021");
-    auto& dotenv = env;
-    dotenv.load_dotenv();
-    const std::string TOKEN = dotenv.operator[]("TOKEN");
-    std::cout << TOKEN << std::endl;
-//    const std::string TOKEN = env["TOKEN"];
+    env.load_dotenv();
+    auto TOKEN = env["TOKEN"];
+//    std::cout << TOKEN << std::endl;
     dpp::cluster bot(TOKEN);
     bot.on_log(dpp::utility::cout_logger());
 
