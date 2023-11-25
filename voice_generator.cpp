@@ -25,15 +25,24 @@ void createWav(const utility::string_t& text, const utility::string_t& toPostUrl
     client.request(methods::POST, builder.to_string())
         .then([=](http_response res){
             cout << res.status_code() << endl;
-            cout << res.extract_json().get() << endl;
-            http_client client2(U(toPostUrl));
-            uri_builder builder2(U("/synthesis"));
-            builder2.append_query(U("speaker"), U("14"));
+//            cout << res.extract_json().get() << endl;
+            http_client client2(U(toPostUrl)+U("/synthesis"));
+//            uri_builder builder2(U("/synthesis"));
+//            builder2.append_query(U("speaker"), U("14"));
             http_request request(methods::POST);
             request.headers().set_content_type(U("application/json"));
-            request.set_body(res.extract_json().get());
+            json::value obj = res.extract_json().get();
+            obj[U("speaker")] = json::value(14);
+//            auto params = res.extract_json().get();
+//            params[U("speaker")] = json::value(14);
+
+
+            cout << obj <<endl;
+            request.set_body(obj);
             client2.request(request).then([](http_response res2){
                cout << res2.status_code() <<endl;
+
+
                 concurrency::streams::fstream::open_ostream("output.wav").then([=](concurrency::streams::ostream output_stream) {
                     // Write the response body to the file
                     return res2.body().read_to_end(output_stream.streambuf());
