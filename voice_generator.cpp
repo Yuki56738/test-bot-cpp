@@ -1,63 +1,62 @@
 //
-// Created by user on 2023/11/13.
+// Created by ubuntu on 11/25/23.
 //
 
 #include "voice_generator.h"
-#include <iostream>
-#include <cpprest/http_client.h>
 #include <cpprest/json.h>
-#include <cpprest/filestream.h>
+#include <cpprest/uri.h>
 
-using namespace web;
-using namespace web::http;
-using namespace web::http::client;
-using namespace concurrency::streams;
+using namespace utility;                    // Common utilities like string conversions
+using namespace web;                        // Common features like URIs.
+using namespace web::http;                  // Common HTTP functionality
+using namespace web::http::client;          // HTTP client features
+using namespace concurrency::streams;       // Asynchronous streams
+//using namespace web::http::experimental::listener;          // HTTP server
+//using namespace web::experimental::web_sockets::client;     // WebSockets client
+using namespace web::json;                                  // JSON library
 using namespace std;
 
-void createWav(const utility::string_t& text, const utility::string_t& to_post_url){
-    // Set the parameters
-//    utility::string_t to_post_url = U("your_server_address");
-//    utility::string_t text = U("your_text");
-    utility::string_t speaker = U("14");
-
-    // Prepare parameters for the first request
-    http_client client(to_post_url);
+void createWav(const utility::string_t& text, const utility::string_t& toPostUrl){
+    http_client client(U(toPostUrl));
     uri_builder builder(U("/audio_query"));
-    builder.append_query(U("speaker"), speaker);
-    builder.append_query(U("text"), text);
+    builder.append_query(U("speaker"), U("14"));
+    builder.append_query(U("text"), U(text));
 
-    // Make the first POST request
-    http_response response = client.request(methods::POST, builder.to_string()).get();
-    wcout << L"Response status code: " << response.status_code() << std::endl;
+    client.request(methods::POST, builder.to_string())
+        .then([=](http_response res){
+            cout << res.status_code() << endl;
+//            cout << res.extract_json().get() << endl;
+            http_client client2(U(toPostUrl)+U("/synthesis"));
+//            uri_builder builder2(U("/synthesis"));
+//            builder2.append_query(U("speaker"), U("14"));
+            http_request request(methods::POST);
+            request.headers().set_content_type(U("application/json"));
+            json::value obj = res.extract_json().get();
+            obj[U("speaker")] = json::value(14);
+//            auto params = res.extract_json().get();
+//            params[U("speaker")] = json::value(14);
 
-    // Prepare parameters for the second request
-    http_client client2(to_post_url);
-    uri_builder builder2(U("/synthesis"));
-    builder2.append_query(U("speaker"), speaker);
 
-    // Make the second POST request
-    http_request request2(methods::POST);
-    request2.headers().set_content_type(U("application/json"));
-    request2.headers().set_content_length(response.headers().content_length());
+            cout << obj <<endl;
+            request.set_body(obj);
+            client2.request(request).then([](http_response res2){
+               cout << res2.status_code() <<endl;
 
-    request2.set_body(response.body());
 
-    http_response response2 = client2.request(request2.method(), builder2.to_string(), request2.body(), request2.headers()).get();
+                concurrency::streams::fstream::open_ostream("output.wav").then([=](concurrency::streams::ostream output_stream) {
+                    // Write the response body to the file
+                    return res2.body().read_to_end(output_stream.streambuf());
+                }).then([=](size_t /*bytesWritten*/) {
+                    std::wcout << L"Response saved to file: " << "output.wav" << std::endl;
+                }).wait(); // Wait for the file operations to complete
 
-    // Save the response content to a file
-    auto fileStream = std::make_shared<ostream>();
 
-    // Open stream to output file.
-    pplx::task<void> writeTask = fstream::open_ostream(U("output.wav")).then([=](ostream outFile) {
-        *fileStream = outFile;
+        }).wait();
+});
+//            uri_builder builder2(U("/synthesis"));
+//            builder2.append_query(U("speaker"), U("14"));
+//            builder2.append_query()
+//            client2.request(methods::POST, builder2.to_string())
+//        });
 
-        // Write the response content to the file.
-        return response2.body().read_to_end(fileStream->streambuf());
-    });
-
-    // Wait for the write operation to finish.
-    writeTask.wait();
-
-    wcout << L"File 'output.wav' saved." << std::endl;
-    }
-
+}

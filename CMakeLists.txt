@@ -17,7 +17,6 @@ add_subdirectory(cpp-dotenv)
 find_package(cpprestsdk REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
-        PRIVATE
         dpp
         cpp_dotenv
         cpprestsdk::cpprest
