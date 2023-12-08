@@ -1,51 +1,37 @@
 //
-// Created by ubuntu on 11/25/23.
+// Created by user on 2023/12/01.
 //
 
 #include "voice_generator.h"
-#include <cpprest/json.h>
-#include <cpprest/uri.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <curl/curl.h>
+#include <json/json.h>
+#include <cstdlib>
 
-using namespace utility;                    // Common utilities like string conversions
-using namespace web;                        // Common features like URIs.
-using namespace web::http;                  // Common HTTP functionality
-using namespace web::http::client;          // HTTP client features
-using namespace concurrency::streams;       // Asynchronous streams
-//using namespace web::http::experimental::listener;          // HTTP server
-//using namespace web::experimental::web_sockets::client;     // WebSockets client
-using namespace web::json;                                  // JSON library
 using namespace std;
 
-void createWav(const utility::string_t& text, const utility::string_t& toPostUrl){
-    http_client client(U(toPostUrl));
-    uri_builder builder(U("/audio_query"));
-    builder.append_query(U("speaker"), U("14"));
-    builder.append_query(U("text"), U(text));
+// A helper function to write the response data from curl to a string
+size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp)
+{
+    ((string*)userp)->append((char*)buffer, size * nmemb);
+    return size * nmemb;
+}
 
-    client.request(methods::POST, builder.to_string())
-        .then([=](http_response res){
-            cout << res.status_code() << endl;
+void createWav(const char* text, const char* toPostUrl){
+//    std::string to_post_url = get_env("VVOX_URL");
+    std::string to_post_url = toPostUrl;
+    // Create a HTTP client
+    http_client client(U("http://" + to_post_url));
 
-            http_client client2(U(toPostUrl)+U("/synthesis"));
-            http_request request(methods::POST);
-            request.headers().set_content_type(U("application/json"));
-            json::value obj = res.extract_json().get();
-            obj[U("speaker")] = json::value(14);
+    // Create a JSON object with parameters
+    json::value params;
+    params[U("speaker")] = json::value::number(14);
+    params[U("text")] = json::value::string(text);
 
-            request.set_body(obj);
-            client2.request(request).then([](http_response res2){
-               cout << res2.status_code() <<endl;
-
-
-                concurrency::streams::fstream::open_ostream("output.wav").then([=](concurrency::streams::ostream output_stream) {
-                    // Write the response body to the file
-                    return res2.body().read_to_end(output_stream.streambuf());
-                }).then([=](size_t /*bytesWritten*/) {
-                    std::wcout << L"Response saved to file: " << "output.wav" << std::endl;
-                }).wait(); // Wait for the file operations to complete
-
-
-        }).wait();
-});
+    // Make a POST request to /audio_query endpoint
+    return client.request(methods::POST, U("/audio_query"), params)
+            .then([](http_response response [aborted]
 
 }
